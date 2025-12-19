@@ -1,11 +1,15 @@
-FROM golang:1.21.13 AS builder
+FROM golang:1.21 AS build
+
 WORKDIR /app
 COPY . .
-RUN ./build.sh
 
-FROM ubuntu:latest
-RUN apt update -y && apt install -y ffmpeg && apt-get clean
+RUN go build -o server ./cmd/server
+
+FROM debian:stable-slim
+
 WORKDIR /app
-COPY --from=builder /app/teamgramd/ /app/
-RUN chmod +x /app/docker/entrypoint.sh
-ENTRYPOINT /app/docker/entrypoint.sh
+COPY --from=build /app/server .
+
+EXPOSE 8080
+
+CMD ["./server"]
